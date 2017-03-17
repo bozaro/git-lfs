@@ -11,6 +11,7 @@ import (
 
 	"github.com/git-lfs/git-lfs/lfsapi"
 	"github.com/git-lfs/git-lfs/tools"
+	"path/filepath"
 )
 
 var (
@@ -39,6 +40,11 @@ type FetchPruneConfig struct {
 	PruneVerifyRemoteAlways bool `git:"lfs.pruneverifyremotealways"`
 	// Name of remote to check for unpushed and verify checks
 	PruneRemoteName string `git:"lfs.pruneremotetocheck"`
+}
+
+// Storage configuration
+type StorageConfig struct {
+	LfsStorageDir string `git:"lfs.storage"`
 }
 
 type Configuration struct {
@@ -301,6 +307,20 @@ func (c *Configuration) FetchPruneConfig() FetchPruneConfig {
 		panic(err.Error())
 	}
 	return *f
+}
+
+func (c *Configuration) StorageConfig() StorageConfig {
+	s := &StorageConfig{
+		LfsStorageDir: "lfs",
+	}
+
+	if err := c.Unmarshal(s); err != nil {
+		panic(err.Error())
+	}
+	if !filepath.IsAbs(s.LfsStorageDir) {
+		s.LfsStorageDir = filepath.Join(LocalGitStorageDir, s.LfsStorageDir)
+	}
+	return *s
 }
 
 func (c *Configuration) SkipDownloadErrors() bool {
